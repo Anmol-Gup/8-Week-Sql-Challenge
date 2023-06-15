@@ -4,6 +4,7 @@
 Website link: https://8weeksqlchallenge.com/getting-started/
 
 **Case Studies**
+
 Case Study #1 - Danny’s Diner
 
 Case Study #2 - Pizza Runner
