@@ -35,3 +35,22 @@ SELECT product_name,Total_Orders
 FROM most_purchased
 ORDER BY Total_Orders DESC
 LIMIT 1
+
+-- 5. Which item was the most popular for each customer?
+WITH most_popular_item
+AS
+(
+  WITH most_popular_item_1
+  AS
+  (
+  SELECT customer_id,product_name,COUNT(customer_id) AS orders
+  FROM dannys_diner.sales s JOIN dannys_diner.menu m
+  ON m.product_id=s.product_id
+  GROUP BY customer_id,product_name
+  ORDER BY customer_id,product_name
+  )
+  SELECT customer_id,product_name,orders,DENSE_RANK() OVER (PARTITION BY customer_id ORDER BY orders DESC) AS rno
+  FROM most_popular_item_1
+)
+SELECT customer_id,product_name,orders
+FROM most_popular_item WHERE rno=1;
