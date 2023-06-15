@@ -21,3 +21,17 @@ AS
 ) 
 SELECT customer_id,product_name,order_date FROM first_item 
 WHERE rno=1;
+
+-- 4. What is the most purchased item on the menu and how many times was it purchased by all customers?
+WITH most_purchased
+AS
+(
+  SELECT product_name,COUNT(product_name) AS Total_Orders
+  FROM dannys_diner.menu m JOIN dannys_diner.sales s
+  ON s.product_id=m.product_id
+  GROUP BY product_name
+)
+SELECT product_name,Total_Orders 
+FROM most_purchased
+ORDER BY Total_Orders DESC
+LIMIT 1
