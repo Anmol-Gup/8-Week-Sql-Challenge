@@ -6,15 +6,15 @@ FROM dannys_diner.sales s JOIN dannys_diner.menu m
 ON m.product_id=s.product_id
 
 -- 2. How many days has each customer visited the restaurant?
-SELECT customer_id,COUNT(join_date) AS num_days_visited
-FROM dannys_diner.members
+SELECT customer_id,COUNT(distinct order_date) AS num_days_visited
+FROM dannys_diner.sales
 GROUP BY customer_id;
 
 -- 3. What was the first item from the menu purchased by each customer?
 WITH first_item
 AS
 (
-  SELECT customer_id,s.product_id,product_name,order_date,ROW_NUMBER() OVER(PARTITION BY customer_id ORDER BY order_date,s.product_id) AS rno 
+  SELECT customer_id,s.product_id,product_name,order_date,ROW_NUMBER() OVER(PARTITION BY customer_id ORDER BY order_date) AS rno 
   FROM dannys_diner.sales s
   JOIN dannys_diner.menu m
   ON m.product_id=s.product_id
@@ -122,4 +122,25 @@ FROM points_cte p JOIN dannys_diner.sales s
 ON s.product_id=p.product_id
 GROUP BY customer_id;
 
--- 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
+-- 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi-how many points
+--do customer A and B have at the end of January?
+WITH points_cte
+AS
+(
+  SELECT 
+      mb.customer_id,m.product_id,
+      CASE
+          WHEN product_name='sushi' OR order_date BETWEEN join_date AND join_date+6 THEN price*20
+          ELSE price*10
+      END AS points
+  FROM dannys_diner.menu m
+  JOIN dannys_diner.sales s
+  ON m.product_id=s.product_id
+  JOIN dannys_diner.members mb
+  ON s.customer_id=mb.customer_id
+  WHERE mb.customer_id in ('A','B') AND extract(month from order_date)=1
+  ORDER BY mb.customer_id
+)
+SELECT customer_id,SUM(points) FROM points_cte
+GROUP BY customer_id;
+  
