@@ -71,3 +71,37 @@ AS
 )
 SELECT customer_id,product_name,order_date,join_date FROM member_first_item
 WHERE rno=1;
+
+-- 7. Which item was purchased just before the customer became a member?
+WITH member_first_item
+AS
+(
+  SELECT mb.customer_id,product_name,order_date,join_date,
+  ROW_NUMBER() OVER(PARTITION BY mb.customer_id ORDER BY order_date DESC) AS rno
+  FROM dannys_diner.members mb 
+  JOIN dannys_diner.sales s
+  ON s.customer_id=mb.customer_id
+  JOIN dannys_diner.menu m
+  ON m.product_id=s.product_id
+  WHERE order_date<join_date
+  ORDER BY mb.customer_id
+)
+SELECT customer_id,product_name,order_date,join_date FROM member_first_item
+WHERE rno=1;
+
+-- 8. What is the total items and amount spent for each member before they became a member?
+WITH member_amount_items
+AS
+(
+  SELECT mb.customer_id,SUM(price) AS Amount, COUNT(s.product_id) AS Total_Item
+  FROM dannys_diner.members mb 
+  JOIN dannys_diner.sales s
+  ON s.customer_id=mb.customer_id
+  JOIN dannys_diner.menu m
+  ON m.product_id=s.product_id
+  WHERE order_date<join_date
+  GROUP BY mb.customer_id
+  ORDER BY mb.customer_id
+)
+SELECT customer_id,amount,total_item FROM member_amount_items;
+
