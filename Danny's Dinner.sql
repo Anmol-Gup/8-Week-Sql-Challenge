@@ -144,3 +144,60 @@ AS
 SELECT customer_id,SUM(points) FROM points_cte
 GROUP BY customer_id;
   
+--Bonus Questions
+--Join All The Things
+SELECT s.customer_id,order_date,product_name,price,
+CASE
+	WHEN order_date<join_date THEN 'N'
+    ELSE 'Y'
+END AS member
+FROM dannys_diner.sales s JOIN dannys_diner.menu m 
+ON m.product_id=s.product_id
+JOIN dannys_diner.members mb
+ON s.customer_id=mb.customer_id
+ORDER BY s.customer_id,order_date;
+
+--Rank All The Things
+--Method-1
+WITH ranking
+AS
+(
+  SELECT s.customer_id,order_date,product_name,price,
+  CASE
+    WHEN order_date<join_date THEN 'N'
+      ELSE 'Y'
+  END AS member
+  FROM dannys_diner.sales s JOIN dannys_diner.menu m 
+  ON m.product_id=s.product_id
+  JOIN dannys_diner.members mb
+  ON s.customer_id=mb.customer_id
+  ORDER BY s.customer_id,order_date 
+)
+SELECT *,
+CASE
+	WHEN member='Y' THEN DENSE_RANK() OVER(PARTITION BY customer_id,member ORDER BY order_date)
+    ELSE NULL
+END AS rno
+FROM ranking;
+
+--Method-2
+WITH ranking
+AS
+(
+  SELECT s.customer_id,order_date,product_name,price,
+  CASE
+    WHEN order_date<join_date THEN 'N'
+    ELSE 'Y'
+  END AS member
+  FROM dannys_diner.sales s JOIN dannys_diner.menu m 
+  ON m.product_id=s.product_id
+  JOIN dannys_diner.members mb
+  ON s.customer_id=mb.customer_id
+  ORDER BY s.customer_id,order_date 
+)
+SELECT customer_id,order_date,product_name,price,
+CASE
+	WHEN member='Y' THEN DENSE_RANK() OVER(PARTITION BY customer_id,member ORDER BY order_date) 
+  ELSE NULL 
+END AS rno
+FROM ranking;
