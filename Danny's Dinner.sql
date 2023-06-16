@@ -54,3 +54,20 @@ AS
 )
 SELECT customer_id,product_name,orders
 FROM most_popular_item WHERE rno=1;
+
+-- 6. Which item was purchased first by the customer after they became a member?
+WITH member_first_item
+AS
+(
+  SELECT mb.customer_id,product_name,order_date,join_date,
+  ROW_NUMBER() OVER(PARTITION BY mb.customer_id ORDER BY order_date) AS rno
+  FROM dannys_diner.members mb 
+  JOIN dannys_diner.sales s
+  ON s.customer_id=mb.customer_id
+  JOIN dannys_diner.menu m
+  ON m.product_id=s.product_id
+  WHERE order_date>join_date
+  ORDER BY mb.customer_id
+)
+SELECT customer_id,product_name,order_date,join_date FROM member_first_item
+WHERE rno=1;
