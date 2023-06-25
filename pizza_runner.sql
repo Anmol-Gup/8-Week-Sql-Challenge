@@ -58,6 +58,7 @@ AS
   FROM customer_orders orders 
   JOIN runner_orders runners
   ON orders.order_id =runners.order_id
+  WHERE cancellation IS NULL OR cancellation IN ('null','')
 )
 SELECT customer_id,
 	SUM(CASE WHEN exclusions='NA' AND extras='NA' THEN 1 ELSE 0 END) AS No_Changes,
@@ -80,9 +81,21 @@ AS
   FROM customer_orders orders 
   JOIN runner_orders runners
   ON orders.order_id =runners.order_id
-  WHERE duration IS NOT NULL
+  WHERE cancellation IS NULL OR cancellation IN ('null','')
 )
-SELECT COUNT(customer_id) AS Total_Pizza_Delivered
+SELECT customer_id,COUNT(customer_id) AS Total_Pizza_Delivered
 FROM pizza_exclusions_extras
-WHERE exclusions<>'NA' AND extras<>'NA';
+WHERE exclusions<>'NA' AND extras<>'NA'
+GROUP BY customer_id;
 
+--9. What was the total volume of pizzas ordered for each hour of the day?
+SELECT EXTRACT(HOUR FROM order_time) AS hour,COUNT(order_id) AS Total_Volume
+FROM customer_orders
+GROUP BY hour
+ORDER BY hour;
+
+--10. What was the volume of orders for each day of the week?
+SELECT TO_CHAR(order_time, 'DAY') AS day,COUNT(order_id) AS Total_Volume
+FROM customer_orders
+GROUP BY day
+ORDER BY Total_Volume DESC;
